@@ -5,7 +5,7 @@ require_once 'config.php';
 
 // Jika user sudah login, langsung arahkan ke halaman profil (atau chat nanti)
 if (isset($_SESSION['user_id'])) {
-    header("Location: profile.php");
+    header("Location: chat.php");
     exit();
 }
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $_SESSION['role'] = $user['role'];
             
             // Arahkan ke halaman profil (nanti bisa diubah ke chat.php)
-            header("Location: profile.php");
+            header("Location: chat.php");
             exit();
         } else {
             $error_message = "Username/Email atau Password salah!";
