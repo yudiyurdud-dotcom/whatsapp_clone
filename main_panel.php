@@ -45,13 +45,26 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
         <div id="active-chat-window" style="display: none; height: 100%; flex-direction: column;">
             <div class="chat-header">
                 <img id="active-avatar" src="" alt="Avatar" style="object-fit: cover;">
-                <h4 id="active-name" style="margin: 0; color: #e9edef;"></h4>
+                <div style="display: flex; flex-direction: column;">
+                    <h4 id="active-name" style="margin: 0; color: #e9edef;"></h4>
+                    <small id="active-status" style="font-size: 12px; margin-top: 2px;"></small>
+                </div>
             </div>
 
             <div class="messages-area" id="messages-display">
                 </div>
 
-            <div class="input-area">
+            <div id="emoji-picker" class="emoji-picker-container" style="display: none;"></div>
+
+            <div id="reply-preview" style="display: none; background-color: #202c33; padding: 10px 15px; border-left: 5px solid #25D366; color: #aebac1; font-size: 13px; position: relative; border-bottom: 1px solid #2a3942;">
+                <strong style="color: #25D366; display: block; margin-bottom: 3px;">Membalas:</strong>
+                <span id="reply-preview-text" style="color: #e9edef;"></span>
+                <span onclick="cancelReply()" style="position: absolute; right: 15px; top: 15px; cursor: pointer; font-size: 18px; font-weight: bold;" title="Batal Membalas">&times;</span>
+            </div>
+
+            <div class="input-area" style="position: relative;">
+                <span class="btn-icon" id="emoji-btn" title="Pilih Emoji" onclick="toggleEmojiPicker()" style="font-size: 24px;">😀</span>
+
                 <label for="chat-image" class="btn-icon" title="Kirim Gambar">📷</label>
                 <input type="file" id="chat-image" style="display: none;" accept="image/*" onchange="sendImage()">
                 
@@ -63,6 +76,11 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
     </div>
 </div>
 
+<div id="image-modal" class="modal">
+  <span class="close-modal" onclick="closeModal()" title="Tutup">&times;</span>
+  <img class="modal-content" id="modal-img">
+</div>
+
 <script src="assets/js/main.js"></script>
 <script>
     // Mendefinisikan ID kamu ke JavaScript
@@ -71,11 +89,17 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
     let currentReceiverId = null;
 
     window.onload = () => {
+        if (typeof initEmojiPicker === "function") initEmojiPicker();
         loadContacts();
         
-        // Polling (menyegarkan pesan) setiap 5 Detik
+        // Polling setiap 5 Detik
         setInterval(() => {
-            if(currentReceiverId) fetchMessages(currentReceiverId);
+            fetch("ajax/update_activity.php"); // 1. Lapor ke server bahwa kita sedang online
+            
+            if(currentReceiverId) {
+                fetchMessages(currentReceiverId); // 2. Cek pesan baru
+                fetchUserStatus(currentReceiverId); // 3. Cek apakah teman kita online
+            }
         }, 5000); 
     };
 
