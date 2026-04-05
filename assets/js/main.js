@@ -125,11 +125,19 @@ async function loadContacts() {
   const res = await fetch("ajax/fetch_contacts.php");
   const users = await res.json();
   let html = "";
+
   users.forEach((user) => {
+    // Tampilkan lencana hijau jika ada pesan yang belum dibaca
+    let badge =
+      user.unread_count > 0
+        ? `<div style="background-color: #25D366; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; font-weight: bold; margin-left: auto;">${user.unread_count}</div>`
+        : "";
+
     html += `
             <div class="contact-item" onclick="openChat(${user.id}, '${user.display_name}', '${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}')">
-                <img src="${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}">
+                <img src="${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}" style="object-fit: cover;">
                 <span><strong>${user.display_name}</strong></span>
+                ${badge}
             </div>`;
   });
   document.getElementById("contact-list").innerHTML = html;
@@ -145,6 +153,12 @@ function openChat(id, name, avatar) {
 }
 
 async function fetchMessages(receiverId) {
+  // 1. Beritahu server bahwa kita sedang membuka/membaca chat ini
+  const fd = new FormData();
+  fd.append("sender_id", receiverId);
+  fetch("ajax/mark_read.php", { method: "POST", body: fd });
+
+  // 2. Ambil pesan terbaru
   const res = await fetch(`ajax/fetch_messages.php?receiver_id=${receiverId}`);
   const data = await res.json();
   let html = "";
@@ -153,25 +167,38 @@ async function fetchMessages(receiverId) {
     let isMyMessage = m.sender_id == myUserId;
     let side = isMyMessage ? "msg-sent" : "msg-received";
 
-    // Tampilkan tombol tong sampah HANYA untuk pesan yang kita kirim
+    // Logika Ikon Status Pesan (Centang Abu-abu / Centang Biru)
+    let statusIcon = "";
+    if (isMyMessage) {
+      statusIcon = m.is_read
+        ? `<span style="color:#53bdeb; margin-left:5px; font-size:12px;">✓✓</span>` // Biru (Dibaca)
+        : `<span style="color:#aebac1; margin-left:5px; font-size:12px;">✓</span>`; // Abu-abu (Terkirim)
+    }
+
     let deleteBtn = isMyMessage
-      ? `<span onclick="deleteMessage(${m.id})" style="cursor:pointer; margin-left:10px; float:right;" title="Hapus Pesan">🗑️</span>`
+      ? `<span onclick="deleteMessage(${m.id})" style="cursor:pointer; margin-left:8px; font-size:12px;" title="Hapus Pesan">🗑️</span>`
       : "";
 
     html += `<div class="msg ${side}">
                 ${m.message_text ? `<div>${m.message_text}</div>` : ""}
                 ${m.image_url ? `<img src="${m.image_url}" class="msg-img">` : ""}
-                <small style="font-size:10px; color:#aebac1; display:block; margin-top:5px; text-align:right;">
-                    ${m.created_at.substr(11, 5)} ${deleteBtn}
-                </small>
+                <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:4px;">
+                    <small style="font-size:10px; color:#aebac1;">${m.created_at.substr(11, 5)}</small>
+                    ${statusIcon}
+                    ${deleteBtn}
+                </div>
              </div>`;
   });
 
   const display = document.getElementById("messages-display");
-  display.innerHTML = html;
 
-  // Gulir ke bawah secara otomatis
-  display.scrollTop = display.scrollHeight;
+  // Deteksi jika ada pesan baru, otomatis gulir ke bawah
+  const isScrolledToBottom =
+    display.scrollHeight - display.clientHeight <= display.scrollTop + 50;
+  display.innerHTML = html;
+  if (isScrolledToBottom) {
+    display.scrollTop = display.scrollHeight;
+  }
 }
 
 // Tambahkan Fungsi Baru Ini di Bagian Paling Bawah main.js
