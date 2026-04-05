@@ -140,6 +140,7 @@ async function fetchMessages(receiverId) {
   const data = await res.json();
   let html = "";
   data.forEach((m) => {
+    // Pastikan menggunakan variabel myUserId (tanpa kode PHP di sini)
     let side = m.sender_id == myUserId ? "msg-sent" : "msg-received";
     html += `<div class="msg ${side}">
                     ${m.message_text ? `<div>${m.message_text}</div>` : ""}

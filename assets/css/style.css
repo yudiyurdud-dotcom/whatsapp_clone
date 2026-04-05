@@ -4,11 +4,12 @@
 
 /* 1. Pengaturan Dasar Halaman */
 body {
-    background-color: #111b21; /* Warna latar belakang utama yang gelap */
-    color: #e9edef; /* Warna teks utama yang terang */
+    background-color: #111b21;
+    /* Warna latar belakang utama yang gelap */
+    color: #e9edef;
+    /* Warna teks utama yang terang */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    overflow: hidden;
 }
 
 /* 2. Container Utama */
@@ -21,19 +22,23 @@ body {
 /* 3. Gaya Sidebar (Daftar Kontak) */
 .sidebar {
     width: 30%;
-    background-color: #111b21; /* Latar belakang sidebar gelap */
-    border-right: 1px solid #222e35; /* Garis pembatas yang sedikit lebih terang */
+    background-color: #111b21;
+    /* Latar belakang sidebar gelap */
+    border-right: 1px solid #222e35;
+    /* Garis pembatas yang sedikit lebih terang */
     display: flex;
     flex-direction: column;
 }
 
 .sidebar-header {
     padding: 15px;
-    background-color: #202c33; /* Warna header yang sedikit berbeda */
+    background-color: #202c33;
+    /* Warna header yang sedikit berbeda */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #aebac1; /* Warna ikon dan teks header */
+    color: #aebac1;
+    /* Warna ikon dan teks header */
 }
 
 .sidebar-header img {
@@ -59,7 +64,8 @@ body {
 }
 
 .contact-item:hover {
-    background-color: #2a3942; /* Warna saat kontak disorot */
+    background-color: #2a3942;
+    /* Warna saat kontak disorot */
 }
 
 .contact-item img {
@@ -79,10 +85,11 @@ body {
     width: 70%;
     display: flex;
     flex-direction: column;
-    background-color: #0b141a; /* Latar belakang jendela chat yang sangat gelap */
+    background-color: #0b141a;
+    /* Latar belakang jendela chat yang sangat gelap */
     /* Gambar latar belakang kustom dengan opasitas rendah */
-    background-image: linear-gradient(rgba(11, 20, 26, 0.9), rgba(11, 20, 26, 0.9)), 
-                      url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    background-image: linear-gradient(rgba(11, 20, 26, 0.9), rgba(11, 20, 26, 0.9)),
+        url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
     background-repeat: repeat;
     background-size: contain;
 }
@@ -130,13 +137,15 @@ body {
 
 .msg-sent {
     align-self: flex-end;
-    background-color: #005c4b; /* Warna gelembung pesan terkirim yang gelap */
+    background-color: #005c4b;
+    /* Warna gelembung pesan terkirim yang gelap */
     border-top-right-radius: 0;
 }
 
 .msg-received {
     align-self: flex-start;
-    background-color: #202c33; /* Warna gelembung pesan diterima yang gelap */
+    background-color: #202c33;
+    /* Warna gelembung pesan diterima yang gelap */
     border-top-left-radius: 0;
 }
 
@@ -149,7 +158,8 @@ body {
 
 .msg small {
     font-size: 10px;
-    color: #aebac1; /* Warna teks waktu */
+    color: #aebac1;
+    /* Warna teks waktu */
     margin-top: 4px;
     display: block;
     text-align: right;
@@ -170,20 +180,23 @@ body {
     padding: 12px;
     border: none;
     border-radius: 20px;
-    background-color: #2a3942; /* Warna latar input */
+    background-color: #2a3942;
+    /* Warna latar input */
     color: #e9edef;
     outline: none;
     font-size: 15px;
 }
 
 .input-area input[type="text"]::placeholder {
-    color: #8696a0; /* Warna teks placeholder */
+    color: #8696a0;
+    /* Warna teks placeholder */
 }
 
 .btn-icon {
     cursor: pointer;
     font-size: 22px;
-    color: #8696a0; /* Warna ikon input area */
+    color: #8696a0;
+    /* Warna ikon input area */
     transition: color 0.2s;
 }
 

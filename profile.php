@@ -72,11 +72,14 @@ $avatar_url = !empty($user['avatar_url']) ? $user['avatar_url'] : 'https://i.ibb
         <?php echo $message; ?>
 
         <div class="avatar-section">
-            <img id="profile-picture" src="<?php echo htmlspecialchars($avatar_url); ?>" alt="Avatar">
-            <br><br>
-            <input type="file" id="avatarInput" accept="image/*" style="display: block; margin: 0 auto 10px auto;">
-            <button class="btn btn-blue" onclick="updateAvatarAndRefresh('avatarInput', <?php echo $user_id; ?>)">Unggah & Ubah Avatar</button>
-        </div>
+    <img id="profile-picture" src="<?php echo htmlspecialchars($avatar_url); ?>" alt="Avatar">
+    <br><br>
+    <input type="file" id="avatarInput" accept="image/*" 
+           style="display: block; margin: 0 auto 10px auto;" 
+           onchange="updateAvatar('avatarInput', <?php echo $user_id; ?>)">
+    
+    <p id="upload-status" style="font-size: 12px; color: #34B7F1; display: none;">Mengunggah...</p>
+</div>
 
         <hr style="border-top: 1px solid #eee; margin: 20px 0;">
 
