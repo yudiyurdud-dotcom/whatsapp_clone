@@ -3,9 +3,9 @@
 
 require_once 'config.php';
 
-// Proteksi Halaman: Pastikan hanya ADMIN yang bisa mengakses halaman ini
+// Proteksi Halaman: Pastikan hanya ADMIN yang bisa mengakses
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    die("<h2 style='text-align:center; color:red; margin-top:50px;'>Akses Ditolak! Anda bukan Admin.</h2>");
+    die("<h2 style='text-align:center; color:#ff4d4d; margin-top:50px;'>Akses Ditolak! Anda bukan Admin.</h2>");
 }
 
 $message = '';
@@ -33,13 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_api_key'])) {
     }
 }
 
-// 3. Proses Ubah Status API Key (Misal: dari Active ke Failed)
+// 3. Proses Ubah Status API Key
 if (isset($_GET['toggle_status']) && isset($_GET['id'])) {
     $key_id = $_GET['id'];
     $new_status = $_GET['toggle_status'];
     $stmt = $conn->prepare("UPDATE imgbb_api_keys SET status = :status WHERE id = :id");
     $stmt->execute(['status' => $new_status, 'id' => $key_id]);
-    header("Location: admin.php"); // Refresh halaman
+    header("Location: admin.php"); 
     exit();
 }
 
@@ -52,11 +52,10 @@ if (isset($_GET['delete_key']) && isset($_GET['id'])) {
     exit();
 }
 
-// Ambil Data Pengaturan Web Saat Ini
+// Ambil Data Pengaturan Web & API Key
 $stmt_settings = $conn->query("SELECT * FROM site_settings WHERE id = 1");
 $site_settings = $stmt_settings->fetch(PDO::FETCH_ASSOC);
 
-// Ambil Semua API Key
 $stmt_keys = $conn->query("SELECT * FROM imgbb_api_keys ORDER BY status ASC, usage_count ASC");
 $api_keys = $stmt_keys->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -68,32 +67,35 @@ $api_keys = $stmt_keys->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin - WhatsApp Clone</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #ece5dd; margin: 0; padding: 20px; }
-        .admin-container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #128C7E; }
-        .btn-logout { background-color: #ff4d4d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        /* TEMA GELAP UNTUK ADMIN PANEL */
+        body { font-family: Arial, sans-serif; background-color: #111b21; color: #e9edef; margin: 0; padding: 20px; }
+        .admin-container { max-width: 1000px; margin: 0 auto; background: #202c33; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2a3942; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #25D366; }
+        .btn-logout { background-color: #2a3942; color: #e9edef; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; border: 1px solid #333; }
+        .btn-logout:hover { background-color: #3a4b55; }
         
-        .section { margin-bottom: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa; }
-        .section h2 { margin-top: 0; color: #333; }
+        .section { margin-bottom: 40px; padding: 20px; border: 1px solid #2a3942; border-radius: 8px; background-color: #111b21; }
+        .section h2 { margin-top: 0; color: #e9edef; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn { background-color: #25D366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #aebac1; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #2a3942; border-radius: 5px; box-sizing: border-box; background-color: #202c33; color: #e9edef; }
+        .btn { background-color: #005c4b; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background-color: #008f75; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        table th { background-color: #f1f1f1; }
-        .badge-active { background: #ddffdd; color: green; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
-        .badge-failed { background: #ffdddd; color: red; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #2a3942; }
+        table th { background-color: #202c33; color: #aebac1; }
+        .badge-active { background: #005c4b; color: #e9edef; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        .badge-failed { background: #ff4d4d; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
         .action-link { text-decoration: none; padding: 5px 10px; border-radius: 5px; font-size: 13px; margin-right: 5px; }
         .link-red { background: #ff4d4d; color: white; }
-        .link-green { background: #25D366; color: white; }
-        .link-gray { background: #666; color: white; }
+        .link-green { background: #005c4b; color: white; }
+        .link-gray { background: #3a4b55; color: white; }
         
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; font-weight: bold; }
+        .alert-success { background-color: #005c4b; color: white; }
+        .alert-error { background-color: #ff4d4d; color: white; }
     </style>
 </head>
 <body>
@@ -101,7 +103,7 @@ $api_keys = $stmt_keys->fetchAll(PDO::FETCH_ASSOC);
     <div class="admin-container">
         <div class="header">
             <h1>Panel Admin</h1>
-            <a href="profile.php" class="btn-logout" style="background-color: #128C7E; margin-right:10px;">Kembali ke Profil</a>
+            <a href="main_panel.php" class="btn-logout" style="margin-right:10px;">Kembali ke Chat</a>
         </div>
 
         <?php echo $message; ?>
@@ -123,10 +125,10 @@ $api_keys = $stmt_keys->fetchAll(PDO::FETCH_ASSOC);
 
         <div class="section">
             <h2>Manajemen API Key ImgBB</h2>
-            <p style="color: #666; font-size: 14px;">Tambahkan API Key cadangan. Sistem akan otomatis memilih key yang berstatus 'active' dengan jumlah pemakaian paling sedikit.</p>
+            <p style="color: #aebac1; font-size: 14px;">Tambahkan API Key cadangan. Sistem akan otomatis memilih key yang berstatus 'active' dengan jumlah pemakaian paling sedikit.</p>
             
             <form action="admin.php" method="POST" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" name="new_api_key" placeholder="Masukkan API Key ImgBB baru..." required style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <input type="text" name="new_api_key" placeholder="Masukkan API Key ImgBB baru..." required style="flex: 1; padding: 10px;">
                 <button type="submit" name="add_api_key" class="btn">+ Tambah Key</button>
             </form>
 
@@ -163,7 +165,7 @@ $api_keys = $stmt_keys->fetchAll(PDO::FETCH_ASSOC);
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="4" style="text-align:center; color:red;">Belum ada API Key. Harap tambahkan minimal 1.</td></tr>
+                        <tr><td colspan="4" style="text-align:center; color:#ff4d4d;">Belum ada API Key. Harap tambahkan minimal 1.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

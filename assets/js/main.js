@@ -84,6 +84,7 @@ async function updateAvatar(fileInputId, userId) {
     return;
   }
 
+  // Memanggil fungsi upload ke ImgBB
   const imageUrl = await uploadToImgBB(fileInput);
 
   if (imageUrl) {
@@ -100,13 +101,21 @@ async function updateAvatar(fileInputId, userId) {
       const dbResult = await dbResponse.json();
 
       if (dbResult.success) {
-        alert("Avatar berhasil diperbarui!");
+        // Berhasil, tidak perlu alert jika ingin langsung refresh,
+        // tapi kita biarkan log saja
+        console.log("Avatar sukses tersimpan di database.");
       } else {
-        alert("Gagal menyimpan ke database.");
+        alert("Gambar terunggah, tapi gagal menyimpan ke database lokal.");
       }
     } catch (error) {
       console.error("Gagal menghubungi server lokal:", error);
+      alert("Error Server Lokal. Coba lagi.");
     }
+  } else {
+    // PERBAIKAN: Munculkan pesan jika API ImgBB gagal total!
+    alert(
+      "Gagal mengunggah foto ke ImgBB. Pastikan API Key di Panel Admin aktif dan Internet stabil.",
+    );
   }
 }
 
@@ -139,18 +148,52 @@ async function fetchMessages(receiverId) {
   const res = await fetch(`ajax/fetch_messages.php?receiver_id=${receiverId}`);
   const data = await res.json();
   let html = "";
+
   data.forEach((m) => {
-    // Pastikan menggunakan variabel myUserId (tanpa kode PHP di sini)
-    let side = m.sender_id == myUserId ? "msg-sent" : "msg-received";
+    let isMyMessage = m.sender_id == myUserId;
+    let side = isMyMessage ? "msg-sent" : "msg-received";
+
+    // Tampilkan tombol tong sampah HANYA untuk pesan yang kita kirim
+    let deleteBtn = isMyMessage
+      ? `<span onclick="deleteMessage(${m.id})" style="cursor:pointer; margin-left:10px; float:right;" title="Hapus Pesan">🗑️</span>`
+      : "";
+
     html += `<div class="msg ${side}">
-                    ${m.message_text ? `<div>${m.message_text}</div>` : ""}
-                    ${m.image_url ? `<img src="${m.image_url}" class="msg-img">` : ""}
-                    <small style="font-size:10px; color:gray;">${m.created_at.substr(11, 5)}</small>
-                 </div>`;
+                ${m.message_text ? `<div>${m.message_text}</div>` : ""}
+                ${m.image_url ? `<img src="${m.image_url}" class="msg-img">` : ""}
+                <small style="font-size:10px; color:#aebac1; display:block; margin-top:5px; text-align:right;">
+                    ${m.created_at.substr(11, 5)} ${deleteBtn}
+                </small>
+             </div>`;
   });
+
   const display = document.getElementById("messages-display");
   display.innerHTML = html;
+
+  // Gulir ke bawah secara otomatis
   display.scrollTop = display.scrollHeight;
+}
+
+// Tambahkan Fungsi Baru Ini di Bagian Paling Bawah main.js
+async function deleteMessage(messageId) {
+  if (confirm("Apakah kamu yakin ingin menghapus pesan ini?")) {
+    const fd = new FormData();
+    fd.append("message_id", messageId);
+
+    const res = await fetch("ajax/delete_message.php", {
+      method: "POST",
+      body: fd,
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // Jika berhasil dihapus, segarkan langsung layar obrolan
+      fetchMessages(currentReceiverId);
+    } else {
+      alert("Gagal menghapus pesan: " + data.error);
+    }
+  }
 }
 
 async function sendMessage() {
