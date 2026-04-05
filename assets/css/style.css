@@ -1,0 +1,212 @@
+/* ==========================================
+   TEMA GELAP (DARK MODE) UNTUK WHATSAPP CLONE
+   ========================================== */
+
+/* 1. Pengaturan Dasar Halaman */
+body {
+    background-color: #111b21; /* Warna latar belakang utama yang gelap */
+    color: #e9edef; /* Warna teks utama yang terang */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* 2. Container Utama */
+.main-wrapper {
+    display: flex;
+    height: 100vh;
+    background-color: #111b21;
+}
+
+/* 3. Gaya Sidebar (Daftar Kontak) */
+.sidebar {
+    width: 30%;
+    background-color: #111b21; /* Latar belakang sidebar gelap */
+    border-right: 1px solid #222e35; /* Garis pembatas yang sedikit lebih terang */
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 15px;
+    background-color: #202c33; /* Warna header yang sedikit berbeda */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #aebac1; /* Warna ikon dan teks header */
+}
+
+.sidebar-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.user-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.contact-item {
+    padding: 15px;
+    border-bottom: 1px solid #222e35;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: transparent;
+    transition: background-color 0.2s;
+}
+
+.contact-item:hover {
+    background-color: #2a3942; /* Warna saat kontak disorot */
+}
+
+.contact-item img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.contact-item span {
+    font-weight: bold;
+    color: #e9edef;
+}
+
+/* 4. Gaya Jendela Chat Utama */
+.chat-container {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    background-color: #0b141a; /* Latar belakang jendela chat yang sangat gelap */
+    /* Gambar latar belakang kustom dengan opasitas rendah */
+    background-image: linear-gradient(rgba(11, 20, 26, 0.9), rgba(11, 20, 26, 0.9)), 
+                      url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    background-repeat: repeat;
+    background-size: contain;
+}
+
+.chat-header {
+    padding: 10px 20px;
+    background-color: #202c33;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid #222e35;
+    color: #e9edef;
+}
+
+.chat-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.chat-header h4 {
+    margin: 0;
+    color: #e9edef;
+}
+
+.messages-area {
+    flex: 1;
+    padding: 20px 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 5. Gaya Gelembung Pesan */
+.msg {
+    max-width: 60%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    position: relative;
+    font-size: 14px;
+    word-wrap: break-word;
+    color: #e9edef;
+}
+
+.msg-sent {
+    align-self: flex-end;
+    background-color: #005c4b; /* Warna gelembung pesan terkirim yang gelap */
+    border-top-right-radius: 0;
+}
+
+.msg-received {
+    align-self: flex-start;
+    background-color: #202c33; /* Warna gelembung pesan diterima yang gelap */
+    border-top-left-radius: 0;
+}
+
+.msg-img {
+    max-width: 100%;
+    border-radius: 5px;
+    margin-top: 5px;
+    display: block;
+}
+
+.msg small {
+    font-size: 10px;
+    color: #aebac1; /* Warna teks waktu */
+    margin-top: 4px;
+    display: block;
+    text-align: right;
+}
+
+/* 6. Gaya Area Input Pesan */
+.input-area {
+    padding: 10px 20px;
+    background-color: #202c33;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-top: 1px solid #222e35;
+}
+
+.input-area input[type="text"] {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 20px;
+    background-color: #2a3942; /* Warna latar input */
+    color: #e9edef;
+    outline: none;
+    font-size: 15px;
+}
+
+.input-area input[type="text"]::placeholder {
+    color: #8696a0; /* Warna teks placeholder */
+}
+
+.btn-icon {
+    cursor: pointer;
+    font-size: 22px;
+    color: #8696a0; /* Warna ikon input area */
+    transition: color 0.2s;
+}
+
+.btn-icon:hover {
+    color: #aebac1;
+}
+
+/* 7. Gaya Panel Selamat Datang */
+#chat-welcome {
+    margin: auto;
+    text-align: center;
+    color: #aebac1;
+    max-width: 400px;
+    padding: 20px;
+}
+
+#chat-welcome h2 {
+    color: #e9edef;
+    font-weight: 300;
+    margin-top: 15px;
+}
+
+#chat-welcome p {
+    font-size: 14px;
+    line-height: 1.6;
+}

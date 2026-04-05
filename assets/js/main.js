@@ -113,70 +113,70 @@ async function updateAvatar(fileInputId, userId) {
 // Kode ini diletakkan di C:\Users\User\Downloads\whatsapp_clone\assets\js\main.js
 
 async function loadContacts() {
-    const res = await fetch('ajax/fetch_contacts.php');
-    const users = await res.json();
-    let html = '';
-    users.forEach(user => {
-        html += `
-            <div class="contact-item" onclick="openChat(${user.id}, '${user.display_name}', '${user.avatar_url || 'https://i.ibb.co/30B37f8/default-avatar.png'}')">
-                <img src="${user.avatar_url || 'https://i.ibb.co/30B37f8/default-avatar.png'}">
+  const res = await fetch("ajax/fetch_contacts.php");
+  const users = await res.json();
+  let html = "";
+  users.forEach((user) => {
+    html += `
+            <div class="contact-item" onclick="openChat(${user.id}, '${user.display_name}', '${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}')">
+                <img src="${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}">
                 <span><strong>${user.display_name}</strong></span>
             </div>`;
-    });
-    document.getElementById('contact-list').innerHTML = html;
+  });
+  document.getElementById("contact-list").innerHTML = html;
 }
 
 function openChat(id, name, avatar) {
-    currentReceiverId = id;
-    document.getElementById('chat-welcome').style.display = 'none';
-    document.getElementById('active-chat-window').style.display = 'flex';
-    document.getElementById('active-name').innerText = name;
-    document.getElementById('active-avatar').src = avatar;
-    fetchMessages(id);
+  currentReceiverId = id;
+  document.getElementById("chat-welcome").style.display = "none";
+  document.getElementById("active-chat-window").style.display = "flex";
+  document.getElementById("active-name").innerText = name;
+  document.getElementById("active-avatar").src = avatar;
+  fetchMessages(id);
 }
 
 async function fetchMessages(receiverId) {
-    const res = await fetch(`ajax/fetch_messages.php?receiver_id=${receiverId}`);
-    const data = await res.json();
-    let html = '';
-    data.forEach(m => {
-        let side = m.sender_id == <?php echo $_SESSION['user_id'] ?? 0; ?> ? 'msg-sent' : 'msg-received';
-        html += `<div class="msg ${side}">
-                    ${m.message_text ? `<div>${m.message_text}</div>` : ''}
-                    ${m.image_url ? `<img src="${m.image_url}" class="msg-img">` : ''}
-                    <small style="font-size:10px; color:gray;">${m.created_at.substr(11,5)}</small>
+  const res = await fetch(`ajax/fetch_messages.php?receiver_id=${receiverId}`);
+  const data = await res.json();
+  let html = "";
+  data.forEach((m) => {
+    let side = m.sender_id == myUserId ? "msg-sent" : "msg-received";
+    html += `<div class="msg ${side}">
+                    ${m.message_text ? `<div>${m.message_text}</div>` : ""}
+                    ${m.image_url ? `<img src="${m.image_url}" class="msg-img">` : ""}
+                    <small style="font-size:10px; color:gray;">${m.created_at.substr(11, 5)}</small>
                  </div>`;
-    });
-    const display = document.getElementById('messages-display');
-    display.innerHTML = html;
-    display.scrollTop = display.scrollHeight;
+  });
+  const display = document.getElementById("messages-display");
+  display.innerHTML = html;
+  display.scrollTop = display.scrollHeight;
 }
 
 async function sendMessage() {
-    const input = document.getElementById('msg-input');
-    const msg = input.value.trim();
-    if(!msg || !currentReceiverId) return;
+  const input = document.getElementById("msg-input");
+  const msg = input.value.trim();
+  if (!msg || !currentReceiverId) return;
 
-    const fd = new FormData();
-    fd.append('receiver_id', currentReceiverId);
-    fd.append('message', msg);
+  const fd = new FormData();
+  fd.append("receiver_id", currentReceiverId);
+  fd.append("message", msg);
 
-    input.value = '';
-    await fetch('ajax/send_message.php', { method: 'POST', body: fd });
-    fetchMessages(currentReceiverId);
+  input.value = "";
+  await fetch("ajax/send_message.php", { method: "POST", body: fd });
+  fetchMessages(currentReceiverId);
 }
 
 async function sendImage() {
-    const fileInput = document.getElementById('chat-image');
-    if(!fileInput.files[0]) return;
+  const fileInput = document.getElementById("chat-image");
+  if (!fileInput.files[0]) return;
 
-    // Gunakan fungsi upload cerdas yang sudah kita buat sebelumnya
-    const imageUrl = await uploadToImgBB(fileInput.files[0]);
-    if(imageUrl) {
-        const fd = new FormData();
-        fd.append('receiver_id', currentReceiverId);
-        fd.append('image_url', imageUrl);
-        await fetch('ajax/send_message.php', { method: 'POST', body: fd });
-        fetchMessages(currentReceiverId);
-    }
+  // Gunakan fungsi upload cerdas yang sudah kita buat sebelumnya
+  const imageUrl = await uploadToImgBB(fileInput.files[0]);
+  if (imageUrl) {
+    const fd = new FormData();
+    fd.append("receiver_id", currentReceiverId);
+    fd.append("image_url", imageUrl);
+    await fetch("ajax/send_message.php", { method: "POST", body: fd });
+    fetchMessages(currentReceiverId);
+  }
 }
