@@ -13,6 +13,12 @@ $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = :id");
 $stmt->execute(['id' => $user_id]);
 $me = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// TAMBAHAN: Jika sedang online lalu diblokir, paksa Logout!
+if ($me['is_blocked'] == 1) {
+    header("Location: logout.php");
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">

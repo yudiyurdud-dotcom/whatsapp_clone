@@ -58,6 +58,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
         // Verifikasi password
         if ($user && password_verify($password, $user['password'])) {
+
+        // TAMBAHAN: Cek apakah akun ini sedang diblokir oleh Admin
+            if ($user['is_blocked'] == 1) {
+                $error_message = "Akses Ditolak! Akun Anda telah diblokir oleh Admin.";
+            } else {
+                // Set Session jika tidak diblokir
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['role'] = $user['role'];
+                
+                // Arahkan ke halaman chat setelah berhasil login
+                header("Location: main_panel.php");
+                exit();
+            }
+            
             // Set Session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['role'] = $user['role'];
