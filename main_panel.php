@@ -51,12 +51,18 @@ if ($me['is_blocked'] == 1) {
         <div id="active-chat-window" style="display: none; height: 100%; flex-direction: column;">
             <div class="chat-header">
                 <span id="back-btn-mobile" onclick="closeChatMobile()" style="display: none; font-size: 22px; margin-right: 15px; cursor: pointer;" title="Kembali ke Kontak">⬅️</span>
-                <span class="btn-icon" onclick="reportUser()" title="Laporkan Pengguna" style="font-size: 18px; margin-left: 10px; cursor: pointer;">⚠️</span>
 
-                <img id="active-avatar" src="" alt="Avatar" style="object-fit: cover;">
-                <div style="display: flex; flex-direction: column;">
-                    <h4 id="active-name" style="margin: 0; color: #e9edef;"></h4>
-                    <small id="active-status" style="font-size: 12px; margin-top: 2px;"></small>
+                <div onclick="viewContactProfile()" style="display: flex; align-items: center; cursor: pointer; flex: 1;" title="Lihat Info Kontak">
+                    <img id="active-avatar" src="" alt="Avatar" style="object-fit: cover; margin-right: 12px;">
+                    <div style="display: flex; flex-direction: column;">
+                        <h4 id="active-name" style="margin: 0; color: #e9edef;"></h4>
+                        <small id="active-status" style="font-size: 12px; margin-top: 2px;"></small>
+                    </div>
+                </div>
+                
+                <div style="margin-left: auto; display: flex; gap: 15px;">
+                    <span class="btn-icon" onclick="toggleBlockUser()" title="Blokir / Buka Blokir" style="font-size: 20px; cursor: pointer;">🚫</span>
+                    <span class="btn-icon" onclick="reportUser()" title="Laporkan Pengguna" style="font-size: 20px; cursor: pointer;">⚠️</span>
                 </div>
             </div>
 

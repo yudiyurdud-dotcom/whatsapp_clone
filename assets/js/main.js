@@ -283,13 +283,23 @@ async function sendMessage() {
   const fd = new FormData();
   fd.append("receiver_id", currentReceiverId);
   fd.append("message", msg);
-  if (currentReplyId) fd.append("reply_to_id", currentReplyId); // Kirim ID balasan
+  if (currentReplyId) fd.append("reply_to_id", currentReplyId);
 
   input.value = "";
-  cancelReply(); // Sembunyikan kotak balasan setelah terkirim
+  cancelReply();
 
-  await fetch("ajax/send_message.php", { method: "POST", body: fd });
-  fetchMessages(currentReceiverId);
+  // PERBAIKAN: Tangkap pesan error dari PHP jika diblokir
+  const res = await fetch("ajax/send_message.php", {
+    method: "POST",
+    body: fd,
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    fetchMessages(currentReceiverId);
+  } else {
+    alert(data.error); // Munculkan popup "Tidak dapat mengirim pesan..."
+  }
 }
 
 async function sendImage() {
@@ -661,5 +671,41 @@ async function reportUser() {
     if (data.success) {
       alert("Laporan telah dikirim ke Admin. Terima kasih.");
     }
+  }
+}
+
+// =========================================================
+// Fitur Blokir Pengguna (User ke User)
+// =========================================================
+async function toggleBlockUser() {
+  if (!currentReceiverId) return;
+
+  if (confirm("Yakin ingin memblokir / membuka blokir pengguna ini?")) {
+    const fd = new FormData();
+    fd.append("target_id", currentReceiverId);
+
+    const res = await fetch("ajax/toggle_block_user.php", {
+      method: "POST",
+      body: fd,
+    });
+    const data = await res.json();
+
+    if (data.status === "blocked") {
+      alert(
+        "⛔ Pengguna berhasil diblokir! Kalian tidak akan bisa saling mengirim pesan.",
+      );
+    } else if (data.status === "unblocked") {
+      alert("✅ Blokir dibuka! Kalian bisa saling berbalas pesan kembali.");
+    }
+  }
+}
+
+// =========================================================
+// Fitur Lihat Profil Kontak
+// =========================================================
+function viewContactProfile() {
+  if (currentReceiverId) {
+    // Arahkan ke halaman profil dengan membawa ID teman
+    window.location.href = `view_profile.php?id=${currentReceiverId}`;
   }
 }

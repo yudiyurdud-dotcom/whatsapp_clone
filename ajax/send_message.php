@@ -6,9 +6,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sender_id = $_SESSION['user_id'];
     $receiver_id = $_POST['receiver_id'];
     
+    // CEK STATUS BLOKIR SEBELUM MENGIRIM PESAN
+    $stmt_check = $conn->prepare("SELECT id FROM user_blocks WHERE (blocker_id = :s AND blocked_id = :r) OR (blocker_id = :r AND blocked_id = :s)");
+    $stmt_check->execute(['s' => $sender_id, 'r' => $receiver_id]);
+    
+    if ($stmt_check->rowCount() > 0) {
+        // Tolak pengiriman pesan jika terdeteksi blokir
+        echo json_encode(['success' => false, 'error' => 'Tidak dapat mengirim pesan. Kontak ini diblokir atau memblokir Anda.']);
+        exit();
+    }
+
+    // PROSES PENGIRIMAN PESAN JIKA AMAN
     $text = !empty($_POST['message']) ? $_POST['message'] : null;
     $image_url = !empty($_POST['image_url']) ? $_POST['image_url'] : null;
-    $file_link = !empty($_POST['file_link']) ? $_POST['file_link'] : null; // Tangkap tautan file
+    $file_link = !empty($_POST['file_link']) ? $_POST['file_link'] : null;
     $reply_to = !empty($_POST['reply_to_id']) ? $_POST['reply_to_id'] : null;
 
     try {
