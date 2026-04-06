@@ -286,27 +286,24 @@ body {
 }
 
 /* ==========================================
-   9. Gaya Papan Ketik Emoji
+   9. Gaya Papan Ketik Emoji (Diperbarui)
    ========================================== */
 .emoji-picker-container {
-    position: absolute;
-    bottom: 70px;
-    /* Melayang tepat di atas area input */
-    left: 20px;
+    /* Hapus position absolute agar emoji menempel di bawah dan mendorong layar */
     background-color: #202c33;
-    border: 1px solid #2a3942;
-    border-radius: 8px;
-    padding: 10px;
-    width: 300px;
-    max-height: 250px;
+    border-top: 1px solid #2a3942;
+    padding: 15px 20px;
+    width: 100%;
+    height: 250px;
+    /* Tinggi laci emoji tetap */
     overflow-y: auto;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    z-index: 100;
+    box-sizing: border-box;
+    /* Agar padding tidak merusak lebar 100% */
 
-    /* Menggunakan Grid agar rapi berbaris */
+    /* Menggunakan Grid responsif agar rapi di semua layar */
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+    gap: 8px;
 }
 
 .emoji-item {
@@ -346,4 +343,88 @@ body {
     font-size: 13px;
     color: #e9edef;
     opacity: 0.85;
+}
+
+/* ==========================================
+   11. Gaya Lampiran Dokumen (File Link)
+   ========================================== */
+.doc-msg {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.25);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.doc-msg .doc-icon {
+    font-size: 30px;
+    margin-right: 15px;
+}
+
+.doc-msg a {
+    color: #53bdeb;
+    /* Warna biru khas link WA */
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.doc-msg a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================
+   12. Gaya Responsif (Mobile / HP)
+   ========================================== */
+@media screen and (max-width: 768px) {
+    .main-wrapper {
+        flex-direction: column;
+        /* Ubah orientasi menjadi kolom */
+    }
+
+    .sidebar {
+        width: 100%;
+        /* Sidebar mengambil seluruh layar */
+        display: flex;
+        /* Muncul pertama kali saat web dibuka */
+        border-right: none;
+    }
+
+    .chat-container {
+        width: 100%;
+        display: none;
+        /* Disembunyikan dulu sampai kontak diklik */
+    }
+
+    /* Tampilkan tombol kembali khusus di layar HP */
+    #back-btn-mobile {
+        display: inline-block !important;
+    }
+
+    .msg {
+        max-width: 85%;
+        /* Lebar pesan di HP dibuat lebih panjang */
+    }
+
+    .input-area {
+        padding: 8px 10px;
+        gap: 8px;
+        /* Jarak antar tombol dirapatkan */
+    }
+
+    .input-area input[type="text"] {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* Penyesuaian Papan Emoji agar tidak menabrak layar HP */
+    .emoji-picker-container {
+        width: 90vw;
+        left: 5vw;
+        grid-template-columns: repeat(6, 1fr);
+        /* Kurangi kolom emoji */
+    }
 }

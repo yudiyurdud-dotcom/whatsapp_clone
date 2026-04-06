@@ -19,7 +19,7 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat - WhatsApp Clone</title>
+    <title><?php echo htmlspecialchars(WEB_NAME); ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -29,7 +29,7 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
         <div class="sidebar-header">
             <img src="<?php echo $me['avatar_url'] ?: 'https://i.ibb.co/30B37f8/default-avatar.png'; ?>" onclick="location.href='profile.php'" title="Buka Profil" style="object-fit: cover;">
             <div class="icons">
-                <span class="btn-icon" onclick="location.href='admin.php'" title="Panel Admin">⚙️</span>
+                <span class="btn-icon" onclick="location.href='admin/'" title="Panel Admin">⚙️</span>
             </div>
         </div>
         <div class="user-list" id="contact-list">
@@ -38,12 +38,15 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
 
     <div class="chat-container">
         <div id="chat-welcome" style="margin: auto; text-align: center; color: #8696a0;">
-            <h2 style="color: #e9edef;">WhatsApp Clone</h2>
+            <h2 style="color: #e9edef;"><?php echo htmlspecialchars(WEB_NAME); ?></h2>
             <p>Pilih teman untuk mulai berkirim pesan.</p>
         </div>
 
         <div id="active-chat-window" style="display: none; height: 100%; flex-direction: column;">
             <div class="chat-header">
+                <span id="back-btn-mobile" onclick="closeChatMobile()" style="display: none; font-size: 22px; margin-right: 15px; cursor: pointer;" title="Kembali ke Kontak">⬅️</span>
+                <span class="btn-icon" onclick="reportUser()" title="Laporkan Pengguna" style="font-size: 18px; margin-left: 10px; cursor: pointer;">⚠️</span>
+
                 <img id="active-avatar" src="" alt="Avatar" style="object-fit: cover;">
                 <div style="display: flex; flex-direction: column;">
                     <h4 id="active-name" style="margin: 0; color: #e9edef;"></h4>
@@ -54,8 +57,6 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
             <div class="messages-area" id="messages-display">
                 </div>
 
-            <div id="emoji-picker" class="emoji-picker-container" style="display: none;"></div>
-
             <div id="reply-preview" style="display: none; background-color: #202c33; padding: 10px 15px; border-left: 5px solid #25D366; color: #aebac1; font-size: 13px; position: relative; border-bottom: 1px solid #2a3942;">
                 <strong style="color: #25D366; display: block; margin-bottom: 3px;">Membalas:</strong>
                 <span id="reply-preview-text" style="color: #e9edef;"></span>
@@ -63,15 +64,15 @@ $me = $stmt->fetch(PDO::FETCH_ASSOC);
             </div>
 
             <div class="input-area" style="position: relative;">
-                <span class="btn-icon" id="emoji-btn" title="Pilih Emoji" onclick="toggleEmojiPicker()" style="font-size: 24px;">😀</span>
-
+                <span class="btn-icon" id="emoji-btn" title="Pilih Emoji" onclick="toggleEmojiPicker()" style="font-size: 24px; margin-right: 5px;">😀</span>
+                <span class="btn-icon" title="Kirim Dokumen (Link)" onclick="promptDocumentLink()" style="font-size: 24px; margin-right: 5px;">📎</span>
                 <label for="chat-image" class="btn-icon" title="Kirim Gambar">📷</label>
                 <input type="file" id="chat-image" style="display: none;" accept="image/*" onchange="sendImage()">
-                
                 <input type="text" id="msg-input" placeholder="Ketik pesan..." onkeypress="checkEnter(event)">
-                
                 <button onclick="sendMessage()" style="background: none; border: none; font-size: 24px; cursor: pointer;" title="Kirim Pesan">📩</button>
             </div>
+
+            <div id="emoji-picker" class="emoji-picker-container" style="display: none;"></div>
         </div>
     </div>
 </div>

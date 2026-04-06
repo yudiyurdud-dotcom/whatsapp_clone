@@ -23,9 +23,26 @@ $db_name = 'if0_41585256_db_whatsapp_clone';
 
 try {
     $conn = new PDO("mysql:host={$host};dbname={$db_name};charset=utf8mb4", $db_user, $db_pass);
-    // Set mode error PDO ke exception agar mudah dilacak jika ada salah kode
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Ambil pengaturan web secara global
+    $stmt_set = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+    $web_settings = $stmt_set->fetch(PDO::FETCH_ASSOC);
+    
+    // Definisikan Konstanta agar bisa dipakai di semua file
+    define('WEB_NAME', $web_settings['site_name'] ?? 'WhatsApp Clone');
+    define('WEB_DESC', $web_settings['site_description'] ?? '');
+
 } catch(PDOException $e) {
     die("Koneksi Database Gagal: " . $e->getMessage());
+}
+
+try {
+    $stmt_set = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+    $web_settings = $stmt_set->fetch(PDO::FETCH_ASSOC);
+    // Jadikan nama web sebagai Konstanta Global agar bisa dipanggil di mana saja
+    define('WEB_NAME', $web_settings['site_name'] ?? 'WhatsApp Clone'); 
+} catch (Exception $e) {
+    define('WEB_NAME', 'WhatsApp Clone'); // Jika gagal, gunakan nama default
 }
 ?>

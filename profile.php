@@ -11,6 +11,7 @@ $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $display_name = trim($_POST['display_name']);
     $username = trim($_POST['username']);
+    $bio = trim($_POST['bio']);
 
     try {
         // Cek apakah username sudah dipakai orang lain (selain diri sendiri)
@@ -21,12 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             $message = "<div class='alert alert-error' style='color:red; margin-bottom:10px;'>Username sudah digunakan oleh pengguna lain!</div>";
         } else {
             // Update nama dan username di database
-            $update_stmt = $conn->prepare("UPDATE users SET display_name = :display_name, username = :username WHERE id = :id");
-            $update_stmt->execute([
-                'display_name' => $display_name,
-                'username' => $username,
-                'id' => $user_id
-            ]);
+            $update_stmt = $conn->prepare("UPDATE users SET display_name = :display_name, username = :username, bio = :bio WHERE id = :id");
+    $update_stmt->execute([
+        'display_name' => $display_name,
+        'username' => $username,
+        'bio' => $bio,
+        'id' => $user_id
+    ]);
             $message = "<div class='alert alert-success' style='color:green; margin-bottom:10px;'>Profil berhasil diperbarui!</div>";
         }
     } catch(PDOException $e) {
@@ -48,7 +50,7 @@ $avatar_url = !empty($user['avatar_url']) ? $user['avatar_url'] : 'https://i.ibb
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - WhatsApp Clone</title>
+    <title>Profile - <?php echo htmlspecialchars(WEB_NAME); ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         /* CSS PERBAIKAN: Hapus flex di body agar bisa digulir (scroll) */
@@ -110,6 +112,11 @@ $avatar_url = !empty($user['avatar_url']) ? $user['avatar_url'] : 'https://i.ibb
                 <label>Username</label>
                 <input type="text" name="username" value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" required>
                 <small style="color: gray;">Username ini harus unik.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Bio / Info Profil</label>
+                <input type="text" name="bio" value="<?php echo htmlspecialchars($user['bio'] ?? ''); ?>" placeholder="Status atau info tentang kamu...">
             </div>
             
             <div class="form-group">

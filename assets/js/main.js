@@ -145,17 +145,37 @@ async function loadContacts() {
 
 function openChat(id, name, avatar) {
   currentReceiverId = id;
+
   document.getElementById("chat-welcome").style.display = "none";
   document.getElementById("active-chat-window").style.display = "flex";
+
   document.getElementById("active-name").innerText = name;
   document.getElementById("active-avatar").src = avatar;
 
-  // Tampilkan teks loading sementara
   document.getElementById("active-status").innerText = "Memuat status...";
   document.getElementById("active-status").style.color = "#aebac1";
 
+  // LOGIKA RESPONSIP HP: Jika layar kecil, sembunyikan kontak, penuhi layar dengan chat
+  if (window.innerWidth <= 768) {
+    document.querySelector(".sidebar").style.display = "none";
+    document.querySelector(".chat-container").style.display = "flex";
+  }
+
   fetchMessages(id);
   fetchUserStatus(id);
+}
+
+// Fungsi Baru: Dipanggil saat tombol ⬅️ di HP ditekan
+function closeChatMobile() {
+  currentReceiverId = null; // Reset sesi chat
+
+  // Tampilkan kembali daftar kontak, sembunyikan layar chat
+  document.querySelector(".sidebar").style.display = "flex";
+  document.querySelector(".chat-container").style.display = "none";
+  document.getElementById("active-chat-window").style.display = "none";
+
+  // Hapus timer mengetik jika sedang aktif
+  clearTimeout(typingTimer);
 }
 
 async function fetchMessages(receiverId) {
@@ -184,7 +204,10 @@ async function fetchMessages(receiverId) {
 
     // Teks aman untuk dikirim ke fungsi prepareReply (jika ada petik tunggal)
     let safeText = m.message_text
-      ? m.message_text.replace(/'/g, "\\'")
+      ? m.message_text
+          .replace(/[\r\n]+/g, " ")
+          .replace(/'/g, "\\'")
+          .replace(/"/g, "&quot;")
       : "📷 Gambar";
     let replyBtn = `<span onclick="prepareReply(${m.id}, '${safeText}')" style="cursor:pointer; margin-left:8px; font-size:12px;" title="Balas Pesan">↩️</span>`;
 
@@ -195,9 +218,24 @@ async function fetchMessages(receiverId) {
       quotedContent = `<div class="quoted-msg">${qText}</div>`;
     }
 
+    // Cek apakah pesan ini adalah dokumen
+    let documentContent = "";
+    let regularTextContent = "";
+
+    if (m.file_link) {
+      documentContent = `
+            <div class="doc-msg">
+                <span class="doc-icon">📄</span>
+                <a href="${m.file_link}" target="_blank" title="Buka Dokumen">${m.message_text || "Buka Dokumen"}</a>
+            </div>`;
+    } else if (m.message_text) {
+      regularTextContent = `<div>${m.message_text}</div>`;
+    }
+
     html += `<div class="msg ${side}">
                 ${quotedContent}
-                ${m.message_text ? `<div>${m.message_text}</div>` : ""}
+                ${documentContent}
+                ${regularTextContent}
                 ${m.image_url ? `<img src="${m.image_url}" class="msg-img" onclick="openModal('${m.image_url}')">` : ""}
                 <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:4px;">
                     <small style="font-size:10px; color:#aebac1;">${m.created_at.substr(11, 5)}</small>
@@ -460,9 +498,12 @@ function initEmojiPicker() {
 // 2. Fungsi buka/tutup papan emoji
 function toggleEmojiPicker() {
   const picker = document.getElementById("emoji-picker");
-  // Jika sedang sembunyi, tampilkan dengan mode Grid
   if (picker.style.display === "none" || picker.style.display === "") {
     picker.style.display = "grid";
+
+    // Setelah laci emoji terbuka, gulirkan otomatis layar pesan ke paling bawah
+    const display = document.getElementById("messages-display");
+    display.scrollTop = display.scrollHeight;
   } else {
     picker.style.display = "none";
   }
@@ -564,4 +605,61 @@ function prepareReply(messageId, textSnippet) {
 function cancelReply() {
   currentReplyId = null;
   document.getElementById("reply-preview").style.display = "none";
+}
+
+// =========================================================
+// Fitur Kirim Dokumen (Link)
+// =========================================================
+function promptDocumentLink() {
+  if (!currentReceiverId) {
+    alert("Pilih teman chat terlebih dahulu!");
+    return;
+  }
+
+  const link = prompt(
+    "Masukkan Tautan Dokumen (Google Drive, MediaFire, dll):",
+  );
+  if (link && link.trim() !== "") {
+    const fileName = prompt(
+      "Masukkan Nama File (Contoh: Laporan.pdf):",
+      "Dokumen Terlampir",
+    );
+
+    const fd = new FormData();
+    fd.append("receiver_id", currentReceiverId);
+    fd.append("message", fileName || "Dokumen"); // Simpan nama file sebagai teks pesan
+    fd.append("file_link", link.trim()); // Simpan tautan aslinya
+    if (currentReplyId) fd.append("reply_to_id", currentReplyId);
+
+    cancelReply();
+
+    fetch("ajax/send_message.php", { method: "POST", body: fd })
+      .then(() => fetchMessages(currentReceiverId))
+      .catch((err) => console.error(err));
+  }
+}
+
+// Kode ini diletakkan di whatsapp_clone/assets/js/main.js
+
+async function reportUser() {
+  if (!currentReceiverId) return;
+
+  const reason = prompt(
+    "Mengapa Anda melaporkan pengguna ini? (Contoh: Penipuan, Kata-kata kasar)",
+  );
+  if (reason && reason.trim() !== "") {
+    const fd = new FormData();
+    fd.append("reported_id", currentReceiverId);
+    fd.append("reason", reason);
+
+    const res = await fetch("ajax/report_user.php", {
+      method: "POST",
+      body: fd,
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Laporan telah dikirim ke Admin. Terima kasih.");
+    }
+  }
 }
