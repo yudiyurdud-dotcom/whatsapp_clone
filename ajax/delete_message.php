@@ -1,6 +1,5 @@
 <?php
-// Kode ini diletakkan di C:\Users\User\Downloads\whatsapp_clone\ajax\delete_message.php
-
+// Kode ini diletakkan di PATH_FOLDER/ajax/delete_message.php
 require_once '../config.php';
 header('Content-Type: application/json');
 
@@ -10,8 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($message_id) {
         try {
-            // Hapus pesan HANYA JIKA id_pengirim cocok dengan user yang sedang login
-            $stmt = $conn->prepare("DELETE FROM messages WHERE id = :id AND sender_id = :sender_id");
+            // PERUBAHAN: Ubah status is_deleted menjadi 1, bukannya dihapus permanen
+            $stmt = $conn->prepare("UPDATE messages SET is_deleted = 1 WHERE id = :id AND sender_id = :sender_id");
             $stmt->execute(['id' => $message_id, 'sender_id' => $user_id]);
             
             echo json_encode(['success' => true]);

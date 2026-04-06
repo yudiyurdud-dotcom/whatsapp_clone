@@ -134,8 +134,8 @@ async function loadContacts() {
         : "";
 
     html += `
-            <div class="contact-item" onclick="openChat(${user.id}, '${user.display_name}', '${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}')">
-                <img src="${user.avatar_url || "https://i.ibb.co/30B37f8/default-avatar.png"}" style="object-fit: cover;">
+            <div class="contact-item" onclick="openChat(${user.id}, '${user.display_name}', '${user.avatar_url || "https://i.ibb.co/kVvtwmTf/Fi-Txd-Zl-VEAIDSao.jpg"}')">
+                <img src="${user.avatar_url || "https://i.ibb.co/kVvtwmTf/Fi-Txd-Zl-VEAIDSao.jpg"}" style="object-fit: cover;">
                 <span><strong>${user.display_name}</strong></span>
                 ${badge}
             </div>`;
@@ -178,6 +178,103 @@ function closeChatMobile() {
   clearTimeout(typingTimer);
 }
 
+// =========================================================
+// Fungsi Pemformatan Markdown, Keamanan (XSS), & Deteksi Link
+// =========================================================
+function formatMessage(text) {
+  if (!text) return "";
+
+  // 1. Keamanan XSS
+  let formatted = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  let previewHTML = ""; // Variabel penampung kotak pratinjau
+
+  // 2. Regex Canggih untuk mendeteksi URL, Domain biasa (google.com), dan IP Address (192.168.1.0)
+  const urlPattern =
+    /(\b(?:https?:\/\/)?(?:(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})(?::\d+)?(?:\/[^\s<]*)?)/gi;
+
+  // 3. Sulap teks biasa menjadi Link dan buatkan Preview-nya
+  formatted = formatted.replace(urlPattern, function (url) {
+    let fullUrl = url;
+    // Jika tidak ada awalan http/https, tambahkan otomatis agar tidak error saat diklik
+    if (!fullUrl.match(/^https?:\/\//i)) {
+      fullUrl = "http://" + fullUrl;
+    }
+
+    // --- PEMBUATAN PREVIEW CARD ---
+    // A. Cek apakah ini link YouTube
+    let ytMatch = fullUrl.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w\-]+)/i,
+    );
+    if (ytMatch && ytMatch[1]) {
+      // Ambil Thumbnail asli dari server YouTube
+      previewHTML += `
+            <div class="link-preview">
+                <a href="${fullUrl}" target="_blank">
+                    <img src="https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg" alt="YouTube Thumbnail">
+                    <div class="preview-info">
+                        <strong style="color: #ff0000;">▶ YouTube Video</strong>
+                        <span>${fullUrl}</span>
+                    </div>
+                </a>
+            </div>`;
+    }
+    // B. Cek apakah ini link Twitter / X
+    else if (fullUrl.match(/twitter\.com|x\.com/i)) {
+      previewHTML += `
+            <div class="link-preview">
+                <a href="${fullUrl}" target="_blank">
+                    <div class="preview-info">
+                        <strong style="color: #e9edef;">🐦 X / Twitter</strong>
+                        <span>Menuju ke postingan X...</span>
+                    </div>
+                </a>
+            </div>`;
+    }
+    // C. Cek apakah ini link Instagram
+    else if (fullUrl.match(/instagram\.com/i)) {
+      previewHTML += `
+            <div class="link-preview">
+                <a href="${fullUrl}" target="_blank">
+                    <div class="preview-info">
+                        <strong style="color: #E1306C;">📷 Instagram</strong>
+                        <span>Lihat postingan Instagram...</span>
+                    </div>
+                </a>
+            </div>`;
+    }
+    // D. Preview Umum untuk link lainnya (google.com, IP address, dsb)
+    else {
+      let domain = fullUrl.replace(/^https?:\/\//i, "").split("/")[0];
+      previewHTML += `
+            <div class="link-preview">
+                <a href="${fullUrl}" target="_blank">
+                    <div class="preview-info">
+                        <strong style="color: #53bdeb;">🔗 ${domain}</strong>
+                        <span>Ketuk untuk membuka tautan eksternal</span>
+                    </div>
+                </a>
+            </div>`;
+    }
+
+    // Kembalikan teks asli menjadi tag anchor (link biru)
+    return `<a href="${fullUrl}" target="_blank" class="chat-link">${url}</a>`;
+  });
+
+  // 4. Proses Markdown (Tebal, Miring, Coret, Monospace)
+  formatted = formatted.replace(/```(.*?)```/gs, "<code>$1</code>");
+  formatted = formatted.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  formatted = formatted.replace(/_(.*?)_/g, "<em>$1</em>");
+  formatted = formatted.replace(/~(.*?)~/g, "<del>$1</del>");
+  formatted = formatted.replace(/\n/g, "<br>");
+
+  // Gabungkan pesan yang sudah diformat dengan kotak preview di bawahnya
+  return formatted + previewHTML;
+}
+
 async function fetchMessages(receiverId) {
   const fd = new FormData();
   fd.append("sender_id", receiverId);
@@ -192,51 +289,69 @@ async function fetchMessages(receiverId) {
     let side = isMyMessage ? "msg-sent" : "msg-received";
 
     let statusIcon = "";
-    if (isMyMessage) {
-      statusIcon = m.is_read
-        ? `<span style="color:#53bdeb; margin-left:5px; font-size:12px;">✓✓</span>`
-        : `<span style="color:#aebac1; margin-left:5px; font-size:12px;">✓</span>`;
-    }
-
-    let deleteBtn = isMyMessage
-      ? `<span onclick="deleteMessage(${m.id})" style="cursor:pointer; margin-left:8px; font-size:12px;" title="Hapus Pesan">🗑️</span>`
-      : "";
-
-    // Teks aman untuk dikirim ke fungsi prepareReply (jika ada petik tunggal)
-    let safeText = m.message_text
-      ? m.message_text
-          .replace(/[\r\n]+/g, " ")
-          .replace(/'/g, "\\'")
-          .replace(/"/g, "&quot;")
-      : "📷 Gambar";
-    let replyBtn = `<span onclick="prepareReply(${m.id}, '${safeText}')" style="cursor:pointer; margin-left:8px; font-size:12px;" title="Balas Pesan">↩️</span>`;
-
-    // Render kotak pesan yang sedang dibalas (jika ada)
-    let quotedContent = "";
-    if (m.reply_to_id) {
-      let qText = m.replied_text ? m.replied_text : "📷 Gambar";
-      quotedContent = `<div class="quoted-msg">${qText}</div>`;
-    }
-
-    // Cek apakah pesan ini adalah dokumen
+    let deleteBtn = "";
+    let replyBtn = "";
     let documentContent = "";
     let regularTextContent = "";
+    let imageContent = "";
+    let quotedContent = "";
 
-    if (m.file_link) {
-      documentContent = `
-            <div class="doc-msg">
-                <span class="doc-icon">📄</span>
-                <a href="${m.file_link}" target="_blank" title="Buka Dokumen">${m.message_text || "Buka Dokumen"}</a>
-            </div>`;
-    } else if (m.message_text) {
-      regularTextContent = `<div>${m.message_text}</div>`;
+    // JIKA PESAN DITARIK
+    if (m.is_deleted == 1) {
+      regularTextContent = `<div style="font-style: italic; color: #aebac1;">🚫 Pesan ini telah ditarik</div>`;
+    }
+    // JIKA PESAN NORMAL (TIDAK DITARIK)
+    else {
+      if (isMyMessage) {
+        statusIcon = m.is_read
+          ? `<span style="color:#53bdeb; margin-left:5px; font-size:12px;">✓✓</span>`
+          : `<span style="color:#aebac1; margin-left:5px; font-size:12px;">✓</span>`;
+        deleteBtn = `<span onclick="deleteMessage(${m.id})" style="cursor:pointer; margin-left:8px; font-size:12px;" title="Tarik Pesan">🗑️</span>`;
+      }
+
+      let safeText = m.message_text
+        ? m.message_text
+            .replace(/[\r\n]+/g, " ")
+            .replace(/'/g, "\\'")
+            .replace(/"/g, "&quot;")
+        : "Lampiran";
+      replyBtn = `<span onclick="prepareReply(${m.id}, '${safeText}')" style="cursor:pointer; margin-left:8px; font-size:12px;" title="Balas Pesan">↩️</span>`;
+
+      let formattedText = formatMessage(m.message_text);
+
+      if (m.file_link) {
+        documentContent = `<div class="doc-msg"><span class="doc-icon">📄</span><a href="${m.file_link}" target="_blank" title="Buka Dokumen">${formattedText || "Buka Dokumen"}</a></div>`;
+      } else if (m.message_text) {
+        regularTextContent = `<div>${formattedText}</div>`;
+      }
+
+      if (m.image_url) {
+        imageContent = `<img src="${m.image_url}" class="msg-img" onclick="openModal('${m.image_url}')">`;
+      }
+    }
+
+    // RENDER KOTAK BALASAN (QUOTE)
+    if (m.reply_to_id) {
+      if (m.replied_is_deleted == 1) {
+        quotedContent = `<div class="quoted-msg" style="font-style: italic; color: #aebac1;">🚫 Pesan yang dibalas telah ditarik</div>`;
+      } else {
+        // Terapkan format markdown juga ke teks kutipan balasan
+        let qText = m.replied_text
+          ? formatMessage(m.replied_text)
+          : m.replied_image
+            ? "📷 Gambar"
+            : m.replied_file
+              ? "📄 Dokumen"
+              : "Pesan";
+        quotedContent = `<div class="quoted-msg">${qText}</div>`;
+      }
     }
 
     html += `<div class="msg ${side}">
                 ${quotedContent}
                 ${documentContent}
                 ${regularTextContent}
-                ${m.image_url ? `<img src="${m.image_url}" class="msg-img" onclick="openModal('${m.image_url}')">` : ""}
+                ${imageContent}
                 <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:4px;">
                     <small style="font-size:10px; color:#aebac1;">${m.created_at.substr(11, 5)}</small>
                     ${replyBtn}
@@ -255,7 +370,12 @@ async function fetchMessages(receiverId) {
 
 // Tambahkan Fungsi Baru Ini di Bagian Paling Bawah main.js
 async function deleteMessage(messageId) {
-  if (confirm("Apakah kamu yakin ingin menghapus pesan ini?")) {
+  // Ubah kalimat konfirmasi
+  if (
+    confirm(
+      "Tarik pesan ini? Pesan akan ditarik untuk semua orang di obrolan ini.",
+    )
+  ) {
     const fd = new FormData();
     fd.append("message_id", messageId);
 
@@ -263,14 +383,12 @@ async function deleteMessage(messageId) {
       method: "POST",
       body: fd,
     });
-
     const data = await res.json();
 
     if (data.success) {
-      // Jika berhasil dihapus, segarkan langsung layar obrolan
       fetchMessages(currentReceiverId);
     } else {
-      alert("Gagal menghapus pesan: " + data.error);
+      alert("Gagal menarik pesan: " + data.error);
     }
   }
 }
@@ -344,9 +462,10 @@ window.onclick = function (event) {
 };
 
 // =========================================================
-// Fitur Papan Ketik Emoji
+// Fitur Papan Ketik Emoji (Daftar Lengkap)
 // =========================================================
 const emojiList = [
+  // Wajah & Emosi
   "😀",
   "😃",
   "😄",
@@ -447,10 +566,13 @@ const emojiList = [
   "💩",
   "👻",
   "💀",
+  "☠️",
   "👽",
   "👾",
   "🤖",
   "🎃",
+
+  // Kucing & Simbol Hati
   "😺",
   "😸",
   "😹",
@@ -478,8 +600,48 @@ const emojiList = [
   "💖",
   "💘",
   "💝",
+  "❤️‍🔥",
+  "❤️‍🩹",
+  "💋",
+  "💯",
+  "💢",
+  "💥",
+  "💫",
+  "💦",
+  "💨",
+  "💬",
+  "🗨️",
+  "🗯️",
+  "💭",
+  "💤",
+
+  // Gestur Tangan & Tubuh
+  "👋",
+  "🤚",
+  "🖐️",
+  "✋",
+  "🖖",
+  "👌",
+  "🤌",
+  "🤏",
+  "✌️",
+  "🤞",
+  "🫰",
+  "🤟",
+  "🤘",
+  "🤙",
+  "👈",
+  "👉",
+  "👆",
+  "🖕",
+  "👇",
+  "☝️",
   "👍",
   "👎",
+  "✊",
+  "👊",
+  "🤛",
+  "🤜",
   "👏",
   "🙌",
   "👐",
@@ -487,10 +649,380 @@ const emojiList = [
   "🤝",
   "🙏",
   "✍️",
+  "💅",
+  "🤳",
   "💪",
   "🦾",
   "🦵",
   "🦿",
+  "🦶",
+  "👣",
+
+  // Hewan & Alam
+  "🐶",
+  "🐱",
+  "🐭",
+  "🐹",
+  "🐰",
+  "🦊",
+  "🐻",
+  "🐼",
+  "🐻‍❄️",
+  "🐨",
+  "🐯",
+  "🦁",
+  "🐮",
+  "🐷",
+  "🐽",
+  "🐸",
+  "🐵",
+  "🙈",
+  "🙉",
+  "🙊",
+  "🐒",
+  "🐔",
+  "🐧",
+  "🐦",
+  "🐤",
+  "🐣",
+  "🐥",
+  "🦆",
+  "🦅",
+  "🦉",
+  "🦇",
+  "🐺",
+  "🐗",
+  "🐴",
+  "🦄",
+  "🐝",
+  "🪱",
+  "🐛",
+  "🦋",
+  "🐌",
+  "🐞",
+  "🐜",
+  "🪰",
+  "🪲",
+  "🪳",
+  "🦟",
+  "🦗",
+  "🕷️",
+  "🕸️",
+  "🦂",
+  "🐢",
+  "🐍",
+  "🦎",
+  "🦖",
+  "🦕",
+  "🐙",
+  "🦑",
+  "🦐",
+  "🦞",
+  "🦀",
+  "🐡",
+  "🐠",
+  "🐟",
+  "🐬",
+  "🐳",
+  "🐋",
+  "🦈",
+  "🦭",
+  "🐊",
+  "🐅",
+  "🐆",
+  "🦓",
+  "🦍",
+  "🦧",
+  "🦣",
+  "🐘",
+  "🦛",
+  "🦏",
+  "🐪",
+  "🐫",
+  "🦒",
+  "🦘",
+  "🦬",
+  "🐃",
+  "🐂",
+  "🐄",
+  "🐎",
+  "🐖",
+  "🐏",
+  "🐑",
+  "🦙",
+  "🐐",
+  "🦌",
+  "🐕",
+  "🐩",
+  "🦮",
+  "🐕‍🦺",
+  "🐈",
+  "🐈‍⬛",
+  "🪶",
+  "🐓",
+  "🦃",
+  "🦤",
+  "🦚",
+  "🦜",
+  "🦢",
+  "🦩",
+  "🕊️",
+  "🐇",
+  "🦝",
+  "🦨",
+  "🦡",
+  "🦫",
+  "🦦",
+  "🦥",
+  "🐁",
+  "🐀",
+  "🐿️",
+  "🦔",
+  "🐾",
+  "🐉",
+  "🐲",
+  "🌵",
+  "🎄",
+  "🌲",
+  "🌳",
+  "🌴",
+  "🪵",
+  "🌱",
+  "🌿",
+  "☘️",
+  "🍀",
+  "🎍",
+  "🪴",
+  "🎋",
+  "🍃",
+  "🍂",
+  "🍁",
+  "🍄",
+  "🐚",
+  "🪨",
+  "🌾",
+  "💐",
+  "🌷",
+  "🌹",
+  "🥀",
+  "🌺",
+  "🌸",
+  "🌼",
+  "🌻",
+
+  // Makanan & Minuman
+  "🍏",
+  "🍎",
+  "🍐",
+  "🍊",
+  "🍋",
+  "🍌",
+  "🍉",
+  "🍇",
+  "🍓",
+  "🫐",
+  "🍈",
+  "🍒",
+  "🍑",
+  "🥭",
+  "🍍",
+  "🥥",
+  "🥝",
+  "🍅",
+  "🍆",
+  "🥑",
+  "🥦",
+  "🥬",
+  "🥒",
+  "🌶️",
+  "🫑",
+  "🌽",
+  "🥕",
+  "🫒",
+  "🧄",
+  "🧅",
+  "🥔",
+  "🍠",
+  "🥐",
+  "🥯",
+  "🍞",
+  "🥖",
+  "🥨",
+  "🧀",
+  "🥚",
+  "🍳",
+  "🧈",
+  "🥞",
+  "🧇",
+  "🥓",
+  "🥩",
+  "🍗",
+  "🍖",
+  "🦴",
+  "🌭",
+  "🍔",
+  "🍟",
+  "🍕",
+  "🫓",
+  "🥪",
+  "🥙",
+  "🧆",
+  "🌮",
+  "🌯",
+  "🫔",
+  "🥗",
+  "🥘",
+  "🫕",
+  "🥫",
+  "🍝",
+  "🍜",
+  "🍲",
+  "🍛",
+  "🍣",
+  "🍱",
+  "🥟",
+  "🦪",
+  "🍤",
+  "🍙",
+  "🍚",
+  "🍘",
+  "🍥",
+  "🥠",
+  "🥮",
+  "🍢",
+  "🍡",
+  "🍧",
+  "🍨",
+  "🍦",
+  "🥧",
+  "🧁",
+  "🍰",
+  "🎂",
+  "🍮",
+  "🍭",
+  "🍬",
+  "🍫",
+  "🍿",
+  "🍩",
+  "🍪",
+  "🌰",
+  "🥜",
+  "🍯",
+  "🥛",
+  "🍼",
+  "🫖",
+  "☕",
+  "🍵",
+  "🧃",
+  "🥤",
+  "🧋",
+  "🍶",
+  "🍺",
+  "🍻",
+  "🥂",
+  "🍷",
+  "🥃",
+  "🍸",
+  "🍹",
+  "🧉",
+  "🍾",
+  "🧊",
+  "🥄",
+  "🍴",
+  "🍽️",
+  "🥣",
+  "🥡",
+  "🥢",
+  "🧂",
+
+  // Aktivitas & Olahraga
+  "⚽",
+  "🏀",
+  "🏈",
+  "⚾",
+  "🥎",
+  "🎾",
+  "🏐",
+  "🏉",
+  "🥏",
+  "🎱",
+  "🪀",
+  "🏓",
+  "🏸",
+  "🏒",
+  "🏑",
+  "🥍",
+  "🏏",
+  "🪃",
+  "🥅",
+  "⛳",
+  "🪁",
+  "🏹",
+  "🎣",
+  "🤿",
+  "🥊",
+  "🥋",
+  "🎽",
+  "🛹",
+  "🛼",
+  "🛷",
+  "⛸️",
+  "🥌",
+  "🎿",
+  "⛷️",
+  "🏂",
+  "🪂",
+  "🏋️",
+  "🤼",
+  "🤸",
+  "⛹️",
+  "🤺",
+  "🤾",
+  "🏌️",
+  "🏇",
+  "🧘",
+  "🏄",
+  "🏊",
+  "🤽",
+  "🚣",
+  "🧗",
+  "🚵",
+  "🚴",
+  "🏆",
+  "🥇",
+  "🥈",
+  "🥉",
+  "🏅",
+  "🎖️",
+  "🏵️",
+  "🎗️",
+  "🎫",
+  "🎟️",
+  "🎪",
+  "🤹",
+  "🎭",
+  "🩰",
+  "🎨",
+  "🎬",
+  "🎤",
+  "🎧",
+  "🎼",
+  "🎹",
+  "🥁",
+  "🪘",
+  "🎷",
+  "🎺",
+  "🪗",
+  "🎸",
+  "🪕",
+  "🎻",
+  "🎲",
+  "♟️",
+  "🎯",
+  "🎳",
+  "🎮",
+  "🎰",
+  "🧩",
 ];
 
 // 1. Fungsi mencetak daftar emoji ke dalam HTML

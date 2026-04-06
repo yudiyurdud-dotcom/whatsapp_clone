@@ -1,9 +1,9 @@
 <?php
-// Kode ini diletakkan di C:\Users\User\Downloads\whatsapp_clone\index.php
+// Kode ini diletakkan di PATH_FOLDER/index.php
 
 require_once 'config.php';
 
-// Jika user sudah login, langsung arahkan ke halaman profil (atau chat nanti)
+// Jika user sudah login, langsung arahkan ke halaman utama
 if (isset($_SESSION['user_id'])) {
     header("Location: main_panel.php");
     exit();
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         // Verifikasi password
         if ($user && password_verify($password, $user['password'])) {
 
-        // TAMBAHAN: Cek apakah akun ini sedang diblokir oleh Admin
+            // Cek apakah akun ini sedang diblokir oleh Admin
             if ($user['is_blocked'] == 1) {
                 $error_message = "Akses Ditolak! Akun Anda telah diblokir oleh Admin.";
             } else {
@@ -71,14 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 header("Location: main_panel.php");
                 exit();
             }
-            
-            // Set Session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
-            
-            // Arahkan ke halaman profil (nanti bisa diubah ke chat.php)
-            header("Location: main_panel.php");
-            exit();
+
         } else {
             $error_message = "Username/Email atau Password salah!";
         }
@@ -92,28 +85,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars(WEB_NAME); ?></title>
+    <title><?php echo htmlspecialchars(WEB_NAME); ?> - Masuk</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #ece5dd; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .auth-container { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .tabs { display: flex; margin-bottom: 20px; cursor: pointer; border-bottom: 2px solid #ddd; }
-        .tab { flex: 1; text-align: center; padding: 10px; font-weight: bold; color: #555; }
+        /* TEMA GELAP UNTUK HALAMAN AUTENTIKASI */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111b21; color: #e9edef; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .auth-container { background: #202c33; padding: 30px; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .tabs { display: flex; margin-bottom: 20px; cursor: pointer; border-bottom: 2px solid #2a3942; }
+        .tab { flex: 1; text-align: center; padding: 10px; font-weight: bold; color: #aebac1; transition: 0.3s; }
+        .tab:hover { color: #e9edef; }
         .tab.active { color: #25D366; border-bottom: 2px solid #25D366; }
         .form-section { display: none; }
         .form-section.active { display: block; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #25D366; color: white; margin-top: 10px; }
-        .alert { padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
-        .alert-error { background-color: #ffdddd; color: red; }
-        .alert-success { background-color: #ddffdd; color: green; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #aebac1; font-size: 14px; }
+        .form-group input { width: 100%; padding: 12px; background-color: #111b21; border: 1px solid #2a3942; color: #e9edef; border-radius: 5px; box-sizing: border-box; outline: none; transition: border 0.3s; }
+        .form-group input:focus { border-color: #25D366; }
+        .form-group input::placeholder { color: #8696a0; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #005c4b; color: white; margin-top: 10px; transition: background 0.3s; font-size: 15px; }
+        .btn:hover { background-color: #008f75; }
+        .alert { padding: 12px; border-radius: 5px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 14px; }
+        .alert-error { background-color: #ea0038; color: white; }
+        .alert-success { background-color: #25D366; color: white; }
     </style>
 </head>
 <body>
 
     <div class="auth-container">
-        <h2 style="text-align: center; color: #25D366; margin-top:0;">WhatsApp Clone</h2>
+        <h2 style="text-align: center; color: #25D366; margin-top:0;"><?php echo htmlspecialchars(WEB_NAME); ?></h2>
 
         <?php if ($error_message): ?>
             <div class="alert alert-error"><?php echo htmlspecialchars($error_message); ?></div>
@@ -144,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         <div id="form-register" class="form-section">
             <form action="index.php" method="POST">
                 <div class="form-group">
-                    <label>Nama Tampilan (Bisa diubah nanti)</label>
+                    <label>Nama Tampilan</label>
                     <input type="text" name="reg_display_name" required placeholder="Contoh: Miyamura">
                 </div>
                 <div class="form-group">
@@ -166,11 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
     <script>
         function switchTab(tabName) {
-            // Reset active states
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
 
-            // Set clicked tab to active
             if (tabName === 'login') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('form-login').classList.add('active');
